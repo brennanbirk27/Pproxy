@@ -1,81 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Utility Portal</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            background: #121212;
-            color: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-        .container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        .toolbar {
-            background: #1f1f1f;
-            padding: 10px;
-            display: flex;
-            gap: 10px;
-            border-bottom: 1px solid #333;
-        }
-        input {
-            flex: 1;
-            padding: 8px 12px;
-            background: #2d2d2d;
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 4px;
-            outline: none;
-        }
-        button {
-            padding: 8px 16px;
-            background: #0066cc;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover { background: #0052a3; }
-        iframe {
-            flex: 1;
-            border: none;
-            width: 100%;
-            height: 100%;
-            background: #fff;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimal Proxy Interface</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .top-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background-color: #1e1e1e;
+      border-bottom: 1px solid #333;
+    }
+    .nav-btn {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .nav-btn:hover {
+      background: #3a3a3a;
+    }
+    .url-input {
+      flex: 1;
+      background: #0d0d0d;
+      border: 1px solid #444;
+      color: #00ffcc;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    .url-input:focus {
+      outline: none;
+      border-color: #00ffcc;
+    }
+    .viewport {
+      flex: 1;
+      border: none;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="toolbar">
-            <input type="text" id="urlInput" placeholder="Enter URL (e.g., https://example.com)" />
-            <button onclick="loadSite()">Go</button>
-        </div>
-        <iframe id="proxyFrame" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
-    </div>
 
-    <script>
-        function loadSite() {
-            let url = document.getElementById('urlInput').value;
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                url = 'https://' + url;
-            }
-            // Note: Websites that send X-Frame-Options headers will block direct iframe embedding.
-            // For a more advanced backend-less proxy engine later, look into open-source static WISP/Ultraviolet templates.
-            document.getElementById('proxyFrame').src = url;
-        }
+  <div class="top-bar">
+    <button class="nav-btn" id="backBtn">&larr;</button>
+    <button class="nav-btn" id="forwardBtn">&rarr;</button>
+    <button class="nav-btn" id="reloadBtn">&#x21bb;</button>
+    <input type="text" id="urlInput" class="url-input" placeholder="Enter URL (e.g., example.com)" />
+    <button class="nav-btn" id="goBtn">Go</button>
+  </div>
 
-        // Allow pressing 'Enter' to submit
-        document.getElementById('urlInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') { loadSite(); }
-        });
-    </script>
+  <iframe id="proxyFrame" class="viewport" src="about:blank"></iframe>
+
+  <script>
+    const urlInput = document.getElementById('urlInput');
+    const goBtn = document.getElementById('goBtn');
+    const iframe = document.getElementById('proxyFrame');
+    const backBtn = document.getElementById('backBtn');
+    const forwardBtn = document.getElementById('forwardBtn');
+    const reloadBtn = document.getElementById('reloadBtn');
+
+    function navigate() {
+      let rawUrl = urlInput.value.trim();
+      if (!rawUrl) return;
+
+      // Add https:// prefix if missing
+      if (!/^https?:\/\//i.test(rawUrl)) {
+        rawUrl = 'https://' + rawUrl;
+      }
+
+      // NOTE: In production proxies (like Ultraviolet), rawUrl is encoded 
+      // and routed through a backend endpoint (e.g., `/proxy/gateway?url=...`)
+      iframe.src = rawUrl;
+      urlInput.value = rawUrl;
+    }
+
+    goBtn.addEventListener('click', navigate);
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') navigate();
+    });
+
+    backBtn.addEventListener('click', () => iframe.contentWindow.history.back());
+    forwardBtn.addEventListener('click', () => iframe.contentWindow.history.forward());
+    reloadBtn.addEventListener('click', () => iframe.contentWindow.location.reload());
+  </script>
+
 </body>
 </html>
